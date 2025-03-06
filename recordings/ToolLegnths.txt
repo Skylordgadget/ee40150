@@ -1,0 +1,5 @@
+0022 (4DegreeRake) - 155.479 mm
+0023 (6DegreeRake)- 155.746 mm
+0024 (8DegreeRake)- 155.709 mm
+0025 (10DegreeRake)- 155.809 mm
+0026 (12DegreeRake)- 155.577 mm
