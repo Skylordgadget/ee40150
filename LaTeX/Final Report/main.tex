@@ -1,0 +1,85 @@
+\documentclass{article}
+\usepackage{graphicx} % Required for inserting images
+
+\usepackage{subfiles} % LOAD THIS LAST
+
+\graphicspath{{images/}}
+
+\usepackage[a4paper,top=0.95cm,bottom=2.54cm,left=1.57cm,right=1.57cm,marginparwidth=1.75cm]{geometry}
+
+
+\title{   
+    Implementation of Intelligent Monitoring
+    
+    for Sensor Enabled Machining Processes
+
+    \vspace{10px}
+    MEng Final Project Report    
+}
+
+\author{Harry Kneale-Roby}
+\date{2024/25} 
+
+\begin{document}
+
+\maketitle
+
+\begin{table}[!ht]
+    \centering
+    \begin{tabular}{rl}
+        \textbf{Student Number:} & 209226823 \\
+        \textbf{Degree Programme:} & MEng (Hons) Computer Systems Engineering\\
+        \textbf{Supervisor:} & Dr. Ali Mohammadi\\
+        \textbf{Assessor:} & 
+    \end{tabular}
+\end{table}
+
+\begin{center}
+    Word Count (Abstract): \linebreak
+    Word Count (Main Body): 
+\end{center}
+
+% uni of bath logo + maybe a picture of the test drill or experimental setup
+
+% don't count the first page
+% and clear the page style to get rid of the number
+\addtocounter{page}{-1}
+\thispagestyle{empty} 
+\pagebreak
+
+% max 250 words -- 5%
+\textbf{Abstract--}
+
+\tableofcontents
+
+\pagebreak
+
+\section{Acronyms}
+
+\pagebreak
+
+\twocolumn
+
+% Project context: Introduction and description of background theory, analysis techniques, design tools etc. -- 10% (1,200 words)
+% Selection and critical evaluation of the technical literature and other sources of relevant information that impact the project. -- 15% (1,800 words)
+\section{Introduction}
+\subfile{sections/introduction}
+
+% Application of engineering knowledge and understanding and quality of experimental results and/or design work. -- 40% (4,800 words)
+\section{Methods and Results (placeholder title)}
+\subfile{sections/methods_and_results}
+
+% Discussion, conclusions, recommendations for further work and project review. -- 20% (2,400)
+\section{Discussion and Conclusions}
+\subfile{sections/discussion_and_conclusions}
+
+\section{Project Review}
+\subfile{sections/project_review}
+
+\section{Acknowledgements}
+\subfile{sections/project_review}
+
+\bibliographystyle{ieeetr}
+\bibliography{refs}
+
+\end{document}
