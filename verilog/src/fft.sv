@@ -2,7 +2,6 @@
 `include "./../pkg/fft_pkg.sv"
 // synthesis translate_on
 
-
 module fft(
     clk,
     rst,
@@ -21,13 +20,14 @@ module fft(
     parameter FRACTION  = 24; 
 
     parameter FFT_POINTS = 8; // always a power of 2
-    localparam NUM_TWIDDLES = FFT_POINTS >> 1; 
+    localparam NUM_TWIDDLES = FFT_POINTS / 2; 
 
-    /* testing, remove this later =========================================== */
     typedef struct packed {
         logic signed [DATA_WIDTH-1:0] re;
         logic signed [DATA_WIDTH-1:0] im;
     } complex;
+
+    /* testing, remove this later =========================================== */
 
     input logic clk;
     input logic rst;
@@ -41,27 +41,28 @@ module fft(
     output complex fft_data_out;
 
     complex twiddle8 [0:NUM_TWIDDLES-1]; // complex number
-    complex buf [0:FFT_POINTS-1:0];
-    complex stage1 [0:FFT_POINTS-1:0];
-    complex stage2 [0:FFT_POINTS-1:0];
-    complex stage3 [0:FFT_POINTS-1:0];
+    complex shift_reg [0:FFT_POINTS-1];
+    complex stage1 [0:FFT_POINTS-1];
+    complex stage2 [0:FFT_POINTS-1];
+    complex stage3 [0:FFT_POINTS-1];
     /*
-        1000, 0000
-        0b50, f4b0
-        0000, f000
-        f4b0, f4b0
+        0800, 0000
+        05a8, fa58
+        0000, f800
+        fa58, fa58
     */
-    assign twiddle8[0].re = 16'h1000;
+
+    assign twiddle8[0].re = 16'h0800;
     assign twiddle8[0].im = 16'h0000;
 
-    assign twiddle8[1].re = 16'h0b50;
-    assign twiddle8[1].im = 16'hf4b0;
+    assign twiddle8[1].re = 16'h05a8;
+    assign twiddle8[1].im = 16'hfa58;
 
     assign twiddle8[2].re = 16'h0000;
-    assign twiddle8[2].im = 16'hf000;
+    assign twiddle8[2].im = 16'hf800;
 
-    assign twiddle8[3].re = 16'hf4b0;
-    assign twiddle8[3].im = 16'hf4b0;
+    assign twiddle8[3].re = 16'hfa58;
+    assign twiddle8[3].im = 16'hfa58;
 
     /* ====================================================================== */
     
@@ -69,25 +70,27 @@ module fft(
         if (rst) begin
             fft_data_out <= 'b0;
         end else begin
-            buf <= {buf[FFT_POINTS-1:1], fft_data_in};
+            if (fft_valid_in) begin
+                shift_reg <= {{fft_data_in,{DATA_WIDTH{1'b0}}}, shift_reg[0:FFT_POINTS-2]};
+            end
         end
     end
 
 
     generate;
         genvar s1;
-        for (s1=0; s1<NUM_TWIDDLES; s1++) begin
+        for (s1=0; s1<NUM_TWIDDLES; s1++) begin: STAGE_1
             butterfly #(
                 .DATA_WIDTH (DATA_WIDTH),
-                .FRACTION   (FRACTION),
+                .FRACTION   (FRACTION)
             ) butterfly (
                 .clk (clk),
                 .rst (rst),
 
                 .but_ready_in (),
                 .but_valid_in (),
-                .but_a_in ( buf[ reversebits(s1*2) ] ),
-                .but_b_in ( buf[ reversebits((s1*2)+1) ] ),
+                .but_a_in ( shift_reg[ reversebits(s1*2)[31-:3] ] ),
+                .but_b_in ( shift_reg[ reversebits((s1*2)+1)[31-:3] ] ),
                 .but_tw   ( twiddle8[0] ),
 
                 .but_ready_out (),
@@ -100,48 +103,50 @@ module fft(
 
     generate;
         genvar s2;
-        for (s2=0; s2<NUM_TWIDDLES; s2++) begin
+
+
+        for (s2=0; s2<NUM_TWIDDLES; s2++) begin: STAGE_2
             butterfly #(
                 .DATA_WIDTH (DATA_WIDTH),
-                .FRACTION   (FRACTION),
+                .FRACTION   (FRACTION)
             ) butterfly (
                 .clk (clk),
                 .rst (rst),
 
                 .but_ready_in (),
                 .but_valid_in (),
-                .but_a_in ( stage1[ reversebits(s2*2) ] ),
-                .but_b_in ( stage1[ reversebits((s2*2)+1) ] ),
-                .but_tw   ( twiddle8[0] ),
+                .but_a_in ( stage1[ 2*s2 - (s2 % 2) ] ),
+                .but_b_in ( stage1[ 2*s2 - (s2 % 2) + 2 ] ),
+                .but_tw   ( twiddle8[(s2 % 2) * 2] ),
 
                 .but_ready_out (),
                 .but_valid_out (),
-                .but_a_out (stage2[ s2*2 ]),
-                .but_b_out (stage2[ (s2*2)+1 ])
+                .but_a_out (stage2[ 2*s2 - (s2 % 2) ]),
+                .but_b_out (stage2[ 2*s2 - (s2 % 2) + 2 ])
             );
         end
     endgenerate
 
     generate;
-        genvar s1;
-        for (s1=0; s1<NUM_TWIDDLES; s1++) begin
+        genvar s3;
+        for (s3=0; s3<NUM_TWIDDLES; s3++) begin: STAGE_3
             butterfly #(
                 .DATA_WIDTH (DATA_WIDTH),
-                .FRACTION   (FRACTION),
+                .FRACTION   (FRACTION)
             ) butterfly (
                 .clk (clk),
                 .rst (rst),
 
                 .but_ready_in (),
                 .but_valid_in (),
-                .but_a_in ( buf[ reversebits(s1*2) ] ),
-                .but_b_in ( buf[ reversebits((s1*2)+1) ] ),
-                .but_tw   ( twiddle8[0] ),
+                .but_a_in ( stage2[ s3 ] ),
+                .but_b_in ( stage2[ s3 + 4 ] ),
+                .but_tw   ( twiddle8[s3] ),
 
                 .but_ready_out (),
                 .but_valid_out (),
-                .but_a_out (stage1[ s1*2 ]),
-                .but_b_out (stage1[ (s1*2)+1 ])
+                .but_a_out (stage3[ s3 ]),
+                .but_b_out (stage3[ s3 + 4 ])
             );
         end
     endgenerate

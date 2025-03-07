@@ -45,8 +45,8 @@ def int_to_hex(int_in, nibbles_per_int):
 
     return line
 
-int_bits = 4
-frac_bits = 12
+int_bits = 5
+frac_bits = 11
 totalbits = int_bits + frac_bits
 fft_points = 8
 num_twiddles = fft_points // 2
@@ -54,8 +54,8 @@ twiddles = [[0 for x in range(2)] for y in range(num_twiddles)]
 filename = "twiddles{0}".format(num_twiddles)
 
 for r in range(num_twiddles):
-    twiddles[r][0] = cos((-2*pi*r)/fft_points) # real
-    twiddles[r][1] = sin((-2*pi*r)/fft_points) # imaginary
+    twiddles[r][0] = cos(2*pi*(r/fft_points)) # real
+    twiddles[r][1] = -sin(2*pi*(r/fft_points)) # imaginary
 
 hex_lines = []
 for tw in twiddles:

@@ -1,3 +1,7 @@
+// synthesis translate_off
+`include "./../pkg/fft_pkg.sv"
+// synthesis translate_on
+
 module butterfly (
     clk,
     rst,
@@ -13,6 +17,8 @@ module butterfly (
     but_a_out,
     but_b_out
 );
+    import fft_pkg::*;
+
     parameter DATA_WIDTH = 12;
     parameter FRACTION  = 24; 
 
@@ -51,11 +57,20 @@ module butterfly (
     output complex but_b_out;
 
     complex_double Wb;
+    complex Wb_truncated;
+    logic [DATA_WIDTH-1:0] minus_1;
+
+    assign minus_1 = {1'b1, {(INTEGER_BITS-1){1'b1}}, {FRACTIONAL_BITS{1'b0}}};
 
     assign Wb.re = (but_b_in.re * but_tw.re) - (but_b_in.im * but_tw.im); // change this later
     assign Wb.im = (but_b_in.re * but_tw.im) + (but_b_in.im * but_tw.re); // change this later
 
-    assign but_a_out = but_a_in + Wb[MULT_OUT_MSB-:DATA_WIDTH]; // this is fine
-    assign but_b_out = but_b_in - Wb[MULT_OUT_MSB-:DATA_WIDTH]; // this is fine
+    assign Wb_truncated.re = Wb.re[MULT_OUT_MSB-:DATA_WIDTH];
+    assign Wb_truncated.im = Wb.im[MULT_OUT_MSB-:DATA_WIDTH];
+
+    assign but_a_out.re = but_a_in.re + Wb_truncated.re; // this is fine
+    assign but_a_out.im = but_a_in.im + Wb_truncated.im; // this is fine
+    assign but_b_out.re = but_a_in.re - Wb_truncated.re; // this is fine
+    assign but_b_out.im = but_a_in.im - Wb_truncated.im; // this is fine
 
 endmodule
