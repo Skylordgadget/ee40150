@@ -87,16 +87,16 @@ module fft(
                 .clk (clk),
                 .rst (rst),
 
-                .but_ready_in (),
-                .but_valid_in (),
-                .but_a_in ( shift_reg[ reversebits(s1*2)[31-:3] ] ),
-                .but_b_in ( shift_reg[ reversebits((s1*2)+1)[31-:3] ] ),
-                .but_tw   ( twiddle8[0] ),
+                .butterfly_ready_in (),
+                .butterfly_valid_in (1'b1),
+                .butterfly_a_in ( shift_reg[ reversebits(s1*2)[31-:3] ] ),
+                .butterfly_b_in ( shift_reg[ reversebits((s1*2)+1)[31-:3] ] ),
+                .butterfly_tw   ( twiddle8[0] ),
 
-                .but_ready_out (),
-                .but_valid_out (),
-                .but_a_out (stage1[ s1*2 ]),
-                .but_b_out (stage1[ (s1*2)+1 ])
+                .butterfly_ready_out (1'b1),
+                .butterfly_valid_out (),
+                .butterfly_a_out (stage1[ s1*2 ]),
+                .butterfly_b_out (stage1[ (s1*2)+1 ])
             );
         end
     endgenerate
@@ -113,16 +113,16 @@ module fft(
                 .clk (clk),
                 .rst (rst),
 
-                .but_ready_in (),
-                .but_valid_in (),
-                .but_a_in ( stage1[ 2*s2 - (s2 % 2) ] ),
-                .but_b_in ( stage1[ 2*s2 - (s2 % 2) + 2 ] ),
-                .but_tw   ( twiddle8[(s2 % 2) * 2] ),
+                .butterfly_ready_in (),
+                .butterfly_valid_in (1'b1),
+                .butterfly_a_in ( stage1[ 2*s2 - (s2 % 2) ] ),
+                .butterfly_b_in ( stage1[ 2*s2 - (s2 % 2) + 2 ] ),
+                .butterfly_tw   ( twiddle8[(s2 % 2) * 2] ),
 
-                .but_ready_out (),
-                .but_valid_out (),
-                .but_a_out (stage2[ 2*s2 - (s2 % 2) ]),
-                .but_b_out (stage2[ 2*s2 - (s2 % 2) + 2 ])
+                .butterfly_ready_out (1'b1),
+                .butterfly_valid_out (),
+                .butterfly_a_out (stage2[ 2*s2 - (s2 % 2) ]),
+                .butterfly_b_out (stage2[ 2*s2 - (s2 % 2) + 2 ])
             );
         end
     endgenerate
@@ -137,16 +137,16 @@ module fft(
                 .clk (clk),
                 .rst (rst),
 
-                .but_ready_in (),
-                .but_valid_in (),
-                .but_a_in ( stage2[ s3 ] ),
-                .but_b_in ( stage2[ s3 + 4 ] ),
-                .but_tw   ( twiddle8[s3] ),
+                .butterfly_ready_in (),
+                .butterfly_valid_in (1'b1),
+                .butterfly_a_in ( stage2[ s3 ] ),
+                .butterfly_b_in ( stage2[ s3 + 4 ] ),
+                .butterfly_tw   ( twiddle8[s3] ),
 
-                .but_ready_out (),
-                .but_valid_out (),
-                .but_a_out (stage3[ s3 ]),
-                .but_b_out (stage3[ s3 + 4 ])
+                .butterfly_ready_out (1'b1),
+                .butterfly_valid_out (),
+                .butterfly_a_out (stage3[ s3 ]),
+                .butterfly_b_out (stage3[ s3 + 4 ])
             );
         end
     endgenerate
