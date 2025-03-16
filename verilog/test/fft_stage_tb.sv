@@ -4,7 +4,7 @@
 `include "./../pkg/fft_pkg.sv"
 
 
-module fft_tb();
+module fft_stage_tb();
     import helper_pkg::*;
     import fft_pkg::*;
     
@@ -42,32 +42,32 @@ module fft_tb();
     logic clk;
     logic rst;
 
-    logic                       fft_ready_in;
-    logic                       fft_valid_in;
-    logic   [DATA_WIDTH-1:0]    fft_data_in;
+    logic   fft_stage_ready_in;
+    logic   fft_stage_valid_in;
+    complex fft_stage_data_in   [0:FFT_POINTS-1];
 
-    logic                       fft_ready_out;
-    logic                       fft_valid_out;
-    complex                     fft_data_out    [0:FFT_POINTS-1];
+    logic   fft_stage_ready_out;
+    logic   fft_stage_valid_out;
+    complex fft_stage_data_out  [0:FFT_POINTS-1];
 
     initial clk = 1'b0;
     always #(CLK_PERIOD/2) clk = ~clk;
 
-    fft #(
+    fft_stage #(
         .DATA_WIDTH (DATA_WIDTH),
         .FRACTION   (FRACTION),
         .PIPE_WIDTH (PIPE_WIDTH)
-    ) fft (
+    ) fft_stage (
         .clk    (clk),
         .rst    (rst),
 
-        .fft_ready_in     (fft_ready_in),          
-        .fft_valid_in     (fft_valid_in),          
-        .fft_data_in      (fft_data_in),
+        .fft_stage_ready_in     (fft_stage_ready_in),          
+        .fft_stage_valid_in     (fft_stage_valid_in),          
+        .fft_stage_data_in      (fft_stage_data_in),
 
-        .fft_ready_out    (fft_ready_out),
-        .fft_valid_out    (fft_valid_out),
-        .fft_data_out     (fft_data_out)
+        .fft_stage_ready_out    (fft_stage_ready_out),
+        .fft_stage_valid_out    (fft_stage_valid_out),
+        .fft_stage_data_out     (fft_stage_data_out)
     );
 
     int unsigned num_inputs = 1000;
@@ -76,40 +76,36 @@ module fft_tb();
 
     bit valid;
     bit ready;
-    int unsigned valid_cnt = 0;
+
     bit valid_queue[$];                                                         
-    complex rand_data_queue[$];
-    logic [DATA_WIDTH-1:0] rand_data;   
-    complexp_t rand_data_p;
-    complexp_t rand_data_p_fft;
+    complexp_t rand_data_queue[$];      
+    complexp_t rand_data;
+    complexp_t rand_data_ff;
 
     initial begin
         for (int i=0; i<num_inputs; i++) begin
-            valid = $urandom_range(1'b0, 1'b1);
-            //valid = 1'b1;
-            rand_data = 'b0;
-            rand_data[DATA_WIDTH-1-:INTEGER_BITS] = $urandom_range(0, 5);
-            
+            valid = 1'b1;
+            //valid = $urandom_range(1'b0, 1'b1);
+            for (int j=0; j<FFT_POINTS; j++) begin
+                rand_data[j].re = $urandom_range(0, 10);
+                rand_data[j].im = 'b0;
+            end
+
             valid_queue.push_back(valid);
             rand_data_queue.push_back(rand_data);
 
             if (valid) begin
-                rand_data_p[valid_cnt] = {rand_data, {DATA_WIDTH{1'b0}}};
-                valid_cnt++;
-            end
-
-            if (valid_cnt == FFT_POINTS) begin
-                valid_cnt = 0;
-                rand_data_p_fft = rand_data_p;
-                fft_radix2_dit(rand_data_p_fft, fft.fft_stage.twiddle8); // TODO replace twiddle8 with generic
-                mbx.put(rand_data_p_fft);
-                //$display("put %p in the mailbox", rand_data_p_fft);
+                rand_data_ff = rand_data;
+                fft_radix2_dit(rand_data_ff, fft_stage.twiddle8); // TODO replace twiddle8 with generic
+                mbx.put(rand_data_ff);
             end
         end
 
-        fft_ready_out = 1'b0;
-        fft_valid_in = 1'b0;
-        fft_data_in = 'b0;
+        fft_stage_ready_out = 1'b0;
+        fft_stage_valid_in = 1'b0;
+        for (int i=0; i<FFT_POINTS; i++) begin
+            fft_stage_data_in[i] = 'b0;
+        end
         
         rst = 1'b1;
         repeat (3) @(posedge clk);
@@ -118,24 +114,24 @@ module fft_tb();
         for (int i=0; i<num_inputs; i++) begin
             #(CLK_PERIOD);
             
-            fft_ready_out <= $urandom_range(1'b0, 1'b1);
-            //fft_ready_out <= 1'b1;
-            if (fft_ready_in | ~fft_valid_in) begin
-                fft_valid_in <= valid_queue.pop_front();
-                fft_data_in <= rand_data_queue.pop_front();
+            //fft_stage_ready_out <= $urandom_range(1'b0, 1'b1);
+            fft_stage_ready_out <= 1'b1;
+            if (fft_stage_ready_in | ~fft_stage_valid_in) begin
+                fft_stage_valid_in <= valid_queue.pop_front();
+                fft_stage_data_in <= rand_data_queue.pop_front();
             end
         end
 
-        // fft_data_in <= rand_data_p_queue.pop_front();
+        // fft_stage_data_in <= rand_data_queue.pop_front();
         // for (int i=0; i<num_inputs; i++) begin
         //     #(CLK_PERIOD);
             
-        //     // //fft_ready_out <= $urandom_range(1'b0, 1'b1);
-        //     fft_ready_out <= 1'b1;
-        //     // if (fft_ready_in | ~fft_valid_in) begin
-        //     //     //fft_valid_in <= valid_queue.pop_front();
-        //     fft_valid_in <= 1'b1;
-        //     //     fft_data_in <= rand_data_p_queue.pop_front();
+        //     // //fft_stage_ready_out <= $urandom_range(1'b0, 1'b1);
+        //     fft_stage_ready_out <= 1'b1;
+        //     // if (fft_stage_ready_in | ~fft_stage_valid_in) begin
+        //     //     //fft_stage_valid_in <= valid_queue.pop_front();
+        //     fft_stage_valid_in <= 1'b1;
+        //     //     fft_stage_data_in <= rand_data_queue.pop_front();
         //     // end
         // end
 
@@ -148,10 +144,10 @@ module fft_tb();
         int sum;
         forever begin
             #(CLK_PERIOD);
-            if (fft_valid_out && fft_ready_out) begin
+            if (fft_stage_valid_out && fft_stage_ready_out) begin
                 mbx.get(mbx_received);
-                if (mbx_received != fft_data_out) begin
-                    $display("discrepency between expected (e) value and received (r) value\n(e) %p\n(r) %p", mbx_received, fft_data_out);
+                if (mbx_received != fft_stage_data_out) begin
+                    $display("discrepency between expected value: %p, and received value: %p", mbx_received, fft_stage_data_out);
                     $stop;
                 end
             end
@@ -164,28 +160,15 @@ module fft_tb();
     );
         int i, j, k, m, stage, half_N;
         complex_double temp;
-        complex data_temp;
-        int rev;
-        int twiddle_idx;
         
         // Bit-reversal permutation
         int reversed[FFT_POINTS];
         reversed = '{default: 0};
-
         for (i = 0; i < FFT_POINTS; i++) begin
-            rev = 0;
-            for (int b = 0; b < FFT_POINTS_W; b++) begin
-                rev = (rev << 1) | ((i >> b) & 1);
-            end
-
-            reversed[i] = rev;
-
-            if (rev > i) begin // Only swap if rev > i to avoid double swap
-                data_temp = data[i];
-                data[i] = data[rev];
-                data[rev] = data_temp;
-            end
+            reversed[i] = reversebits(i)[31-:FFT_POINTS_W];
         end
+        
+        $display("data before fft: %p", data);
 
         // FFT computation
         for (stage = 1; stage <= FFT_POINTS_W; stage++) begin
@@ -194,12 +177,10 @@ module fft_tb();
                 for (m = 0; m < half_N; m++) begin
                     i = k + m;
                     j = i + half_N;
-                    //$display("stage %d, half_N %d, k %d, m %d, i %d, j %d", stage, half_N, k, m, i, j);
-
+                    
                     // Butterfly operation
-                    twiddle_idx = m * (FFT_POINTS >> stage);
-                    temp.re = (twiddles[twiddle_idx].re * data[j].re) - (twiddles[twiddle_idx].im * data[j].im);
-                    temp.im = (twiddles[twiddle_idx].re * data[j].im) + (twiddles[twiddle_idx].im * data[j].re);
+                    temp.re = twiddles[m].re * data[j].re - twiddles[m].im * data[j].im;
+                    temp.im = twiddles[m].re * data[j].im + twiddles[m].im * data[j].re;
                     
                     data[j].re = data[i].re - temp.re[MULT_OUT_MSB-:DATA_WIDTH];
                     data[j].im = data[i].im - temp.im[MULT_OUT_MSB-:DATA_WIDTH];
@@ -209,6 +190,7 @@ module fft_tb();
                 end
             end
         end
+        $display("data after fft: %p", data);
     endfunction
 
 endmodule

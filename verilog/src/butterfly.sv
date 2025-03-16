@@ -2,14 +2,12 @@ module butterfly (
     clk,
     rst,
 
-    butterfly_ready_in,
-    butterfly_valid_in,
+    clken,
+
     butterfly_a_in,
     butterfly_b_in,
     butterfly_tw,
 
-    butterfly_ready_out,
-    butterfly_valid_out,
     butterfly_a_out,
     butterfly_b_out
 );
@@ -42,35 +40,25 @@ module butterfly (
     input logic clk;
     input logic rst;
 
-    output logic    butterfly_ready_in;
-    input logic     butterfly_valid_in;
+    input logic clken;
+
     input complex   butterfly_a_in;
     input complex   butterfly_b_in;
     input complex   butterfly_tw;
 
-    input logic     butterfly_ready_out;
-    output logic    butterfly_valid_out;
     output complex  butterfly_a_out;
     output complex  butterfly_b_out;
 
     logic signed [MULT_OUT_WIDTH-1:0] re_re, im_im, re_im, im_re;
 
-    logic Wb_valid;
     complex_double Wb;
-
     complex Wb_truncated;
 
-    logic [PIPE_WIDTH-1:0] valid_in_pipe;
+    complex a_in_pipe [0:PIPE_WIDTH];
 
-    // valid_in pipeline
     always_ff @(posedge clk) begin
-        if (rst) begin
-            valid_in_pipe <= {PIPE_WIDTH{1'b0}};
-        end else begin
-            if (butterfly_ready_in) begin
-                // shift the valid signal along the pipe only when ready is high
-                valid_in_pipe <= {valid_in_pipe[PIPE_WIDTH-2:0], butterfly_valid_in};
-            end
+        if (clken) begin
+            a_in_pipe <= {butterfly_a_in, a_in_pipe[0:PIPE_WIDTH-1]};
         end
     end
 
@@ -79,7 +67,7 @@ module butterfly (
         .DATA_WIDTH (DATA_WIDTH),
         .PIPE_WIDTH (PIPE_WIDTH)
     ) re_x_re (
-        .clken  (butterfly_ready_in), // only clock data when ready is high
+        .clken  (clken), // only clock data when ready is high
         .clock  (clk),
         .dataa  (butterfly_b_in.re),
         .datab  (butterfly_tw.re),
@@ -91,7 +79,7 @@ module butterfly (
         .DATA_WIDTH (DATA_WIDTH),
         .PIPE_WIDTH (PIPE_WIDTH)
     ) im_x_im (
-        .clken  (butterfly_ready_in), // only clock data when ready is high
+        .clken  (clken), // only clock data when ready is high
         .clock  (clk),
         .dataa  (butterfly_b_in.im),
         .datab  (butterfly_tw.im),
@@ -103,7 +91,7 @@ module butterfly (
         .DATA_WIDTH (DATA_WIDTH),
         .PIPE_WIDTH (PIPE_WIDTH)
     ) re_x_im (
-        .clken  (butterfly_ready_in), // only clock data when ready is high
+        .clken  (clken), // only clock data when ready is high
         .clock  (clk),
         .dataa  (butterfly_b_in.re),
         .datab  (butterfly_tw.im),
@@ -115,7 +103,7 @@ module butterfly (
         .DATA_WIDTH (DATA_WIDTH),
         .PIPE_WIDTH (PIPE_WIDTH)
     ) im_x_re (
-        .clken  (butterfly_ready_in), // only clock data when ready is high
+        .clken  (clken), // only clock data when ready is high
         .clock  (clk),
         .dataa  (butterfly_b_in.im),
         .datab  (butterfly_tw.re),
@@ -127,26 +115,22 @@ module butterfly (
 
     always_ff @(posedge clk) begin
         if (rst) begin
-            Wb_valid <= 1'b0;
             Wb <= 'b0;
             
             butterfly_a_out <= 'b0;
             butterfly_b_out <= 'b0;
             
-            butterfly_valid_out <= 1'b0;
         end else begin
-            Wb_valid <= valid_in_pipe[PIPE_WIDTH-1];
-            Wb.re <= re_re - im_im;
-            Wb.im <= re_im + im_re;
+            if (clken) begin
+                Wb.re <= re_re - im_im;
+                Wb.im <= re_im + im_re;
 
-            butterfly_valid_out <= Wb_valid;
-            butterfly_a_out.re <= butterfly_a_in.re + Wb_truncated.re;
-            butterfly_a_out.im <= butterfly_a_in.im + Wb_truncated.im;
-            butterfly_b_out.re <= butterfly_a_in.re - Wb_truncated.re;
-            butterfly_b_out.im <= butterfly_a_in.im - Wb_truncated.im;
+                butterfly_a_out.re <= a_in_pipe[PIPE_WIDTH].re + Wb_truncated.re;
+                butterfly_a_out.im <= a_in_pipe[PIPE_WIDTH].im + Wb_truncated.im;
+                butterfly_b_out.re <= a_in_pipe[PIPE_WIDTH].re - Wb_truncated.re;
+                butterfly_b_out.im <= a_in_pipe[PIPE_WIDTH].im - Wb_truncated.im;
+            end
         end 
     end
-
-    assign butterfly_ready_in = rst ? 1'b0 : ~butterfly_valid_out | butterfly_ready_out;
 
 endmodule
