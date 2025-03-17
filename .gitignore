@@ -3,3 +3,4 @@
 /modelsim/work
 /modelsim/*wlf*
 /modelsim/*stacktrace*
+modelsim/vsim.wlf

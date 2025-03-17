@@ -12,7 +12,7 @@ module fft_tb();
 
     localparam DATA_WIDTH   = 16;
     localparam FRACTION     = 11;
-    localparam FFT_POINTS   = 8;
+    localparam FFT_POINTS   = 64;
     localparam BUTTERFLIES  = 4;
     localparam PIPE_WIDTH   = 4;
     localparam FFT_POINTS_W = clog2(FFT_POINTS);
@@ -56,6 +56,8 @@ module fft_tb();
     fft #(
         .DATA_WIDTH (DATA_WIDTH),
         .FRACTION   (FRACTION),
+        .FFT_POINTS (FFT_POINTS),
+        .BUTTERFLIES(BUTTERFLIES),
         .PIPE_WIDTH (PIPE_WIDTH)
     ) fft (
         .clk    (clk),
@@ -70,7 +72,7 @@ module fft_tb();
         .fft_data_out     (fft_data_out)
     );
 
-    int unsigned num_inputs = 1000;
+    int unsigned num_inputs = 10000;
 
     mailbox mbx = new(num_inputs);
 
@@ -85,8 +87,8 @@ module fft_tb();
 
     initial begin
         for (int i=0; i<num_inputs; i++) begin
-            valid = $urandom_range(1'b0, 1'b1);
-            //valid = 1'b1;
+            //valid = $urandom_range(1'b0, 1'b1);
+            valid = 1'b1;
             rand_data = 'b0;
             rand_data[DATA_WIDTH-1-:INTEGER_BITS] = $urandom_range(0, 5);
             
@@ -101,7 +103,7 @@ module fft_tb();
             if (valid_cnt == FFT_POINTS) begin
                 valid_cnt = 0;
                 rand_data_p_fft = rand_data_p;
-                fft_radix2_dit(rand_data_p_fft, fft.fft_stage.twiddle8); // TODO replace twiddle8 with generic
+                fft_radix2_dit(rand_data_p_fft, fft.fft_stage.twiddles); 
                 mbx.put(rand_data_p_fft);
                 //$display("put %p in the mailbox", rand_data_p_fft);
             end
@@ -118,8 +120,8 @@ module fft_tb();
         for (int i=0; i<num_inputs; i++) begin
             #(CLK_PERIOD);
             
-            fft_ready_out <= $urandom_range(1'b0, 1'b1);
-            //fft_ready_out <= 1'b1;
+            //fft_ready_out <= $urandom_range(1'b0, 1'b1);
+            fft_ready_out <= 1'b1;
             if (fft_ready_in | ~fft_valid_in) begin
                 fft_valid_in <= valid_queue.pop_front();
                 fft_data_in <= rand_data_queue.pop_front();

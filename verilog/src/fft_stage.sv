@@ -28,7 +28,7 @@ module fft_stage(
     localparam SUBSTAGES = TWIDDLES / BUTTERFLIES;
     localparam SUBSTAGE_W = clog2(SUBSTAGES);
     localparam DATA_PIPE_WIDTH = PIPE_WIDTH + 2;
-    localparam STAGE_DELAY = DATA_PIPE_WIDTH + SUBSTAGES;
+    localparam STAGE_DELAY = DATA_PIPE_WIDTH + 1 + (SUBSTAGES-1) * TWIDDLES;
     localparam STAGE_DELAY_W = clog2(STAGE_DELAY);
 
     typedef struct packed {
@@ -89,7 +89,7 @@ module fft_stage(
 
  // TEMPORARY TWIDDLES //////////////////////////////////////////////////////////
 
-    complex twiddle8 [0:TWIDDLES-1];
+    complex twiddles [0:TWIDDLES-1];
 
     /*
         0800, 0000
@@ -98,17 +98,89 @@ module fft_stage(
         fa58, fa58
     */
 
-    assign twiddle8[0].re = 16'h0800;
-    assign twiddle8[0].im = 16'h0000;
+    generate
+        if (FFT_POINTS == 8) begin
+            assign twiddles[0].re = 16'h0800;
+            assign twiddles[0].im = 16'h0000;
+            assign twiddles[1].re = 16'h05a8;
+            assign twiddles[1].im = 16'hfa58;
+            assign twiddles[2].re = 16'h0000;
+            assign twiddles[2].im = 16'hf800;
+            assign twiddles[3].re = 16'hfa58;
+            assign twiddles[3].im = 16'hfa58;
+        end else if (FFT_POINTS == 16) begin
 
-    assign twiddle8[1].re = 16'h05a8;
-    assign twiddle8[1].im = 16'hfa58;
+        end else if (FFT_POINTS == 32) begin
 
-    assign twiddle8[2].re = 16'h0000;
-    assign twiddle8[2].im = 16'hf800;
+        end else if (FFT_POINTS == 64) begin
+            assign twiddles[0].re = 16'h0800;
+            assign twiddles[0].im = 16'h0000;
+            assign twiddles[1].re = 16'h07f6;
+            assign twiddles[1].im = 16'hff37;
+            assign twiddles[2].re = 16'h07d9;
+            assign twiddles[2].im = 16'hfe70;
+            assign twiddles[3].re = 16'h07a8;
+            assign twiddles[3].im = 16'hfdad;
+            assign twiddles[4].re = 16'h0764;
+            assign twiddles[4].im = 16'hfcf0;
+            assign twiddles[5].re = 16'h070e;
+            assign twiddles[5].im = 16'hfc3b;
+            assign twiddles[6].re = 16'h06a7;
+            assign twiddles[6].im = 16'hfb8e;
+            assign twiddles[7].re = 16'h062f;
+            assign twiddles[7].im = 16'hfaed;
+            assign twiddles[8].re = 16'h05a8;
+            assign twiddles[8].im = 16'hfa58;
+            assign twiddles[9].re = 16'h0513;
+            assign twiddles[9].im = 16'hf9d1;
+            assign twiddles[10].re = 16'h0472;
+            assign twiddles[10].im = 16'hf959;
+            assign twiddles[11].re = 16'h03c5;
+            assign twiddles[11].im = 16'hf8f2;
+            assign twiddles[12].re = 16'h0310;
+            assign twiddles[12].im = 16'hf89c;
+            assign twiddles[13].re = 16'h0253;
+            assign twiddles[13].im = 16'hf858;
+            assign twiddles[14].re = 16'h0190;
+            assign twiddles[14].im = 16'hf827;
+            assign twiddles[15].re = 16'h00c9;
+            assign twiddles[15].im = 16'hf80a;
+            assign twiddles[16].re = 16'h0000;
+            assign twiddles[16].im = 16'hf800;
+            assign twiddles[17].re = 16'hff37;
+            assign twiddles[17].im = 16'hf80a;
+            assign twiddles[18].re = 16'hfe70;
+            assign twiddles[18].im = 16'hf827;
+            assign twiddles[19].re = 16'hfdad;
+            assign twiddles[19].im = 16'hf858;
+            assign twiddles[20].re = 16'hfcf0;
+            assign twiddles[20].im = 16'hf89c;
+            assign twiddles[21].re = 16'hfc3b;
+            assign twiddles[21].im = 16'hf8f2;
+            assign twiddles[22].re = 16'hfb8e;
+            assign twiddles[22].im = 16'hf959;
+            assign twiddles[23].re = 16'hfaed;
+            assign twiddles[23].im = 16'hf9d1;
+            assign twiddles[24].re = 16'hfa58;
+            assign twiddles[24].im = 16'hfa58;
+            assign twiddles[25].re = 16'hf9d1;
+            assign twiddles[25].im = 16'hfaed;
+            assign twiddles[26].re = 16'hf959;
+            assign twiddles[26].im = 16'hfb8e;
+            assign twiddles[27].re = 16'hf8f2;
+            assign twiddles[27].im = 16'hfc3b;
+            assign twiddles[28].re = 16'hf89c;
+            assign twiddles[28].im = 16'hfcf0;
+            assign twiddles[29].re = 16'hf858;
+            assign twiddles[29].im = 16'hfdad;
+            assign twiddles[30].re = 16'hf827;
+            assign twiddles[30].im = 16'hfe70;
+            assign twiddles[31].re = 16'hf80a;
+            assign twiddles[31].im = 16'hff37;
+        end 
+    endgenerate
 
-    assign twiddle8[3].re = 16'hfa58;
-    assign twiddle8[3].im = 16'hfa58;
+
 
 ////////////////////////////////////////////////////////////////////////////////
     
@@ -195,34 +267,15 @@ module fft_stage(
         end
     end
 
+    // if there are more than one substages
     generate
         if (SUBSTAGES > 1) begin
-            always_ff @(posedge clk) begin
-                if (rst) begin
-                    substage <= {SUBSTAGE_W{1'b0}};
-                    reset_substage <= 1'b0;
-                    next_substage <= 1'b0;
-                end else begin
-                    if (next_substage) begin
-                        substage <= substage + 1'b1;
-
-                        if (reset_substage) begin
-                            substage <= {SUBSTAGE_W{1'b0}};
-                            reset_substage <= 1'b0;
-                        end else if (substage >= SUBSTAGES-2) begin
-                            reset_substage <= 1'b1;
-                        end
-
-                        next_substage <= 1'b0;
-                    end 
-                end
-            end
+            assign substage = stage_counter[0+:SUBSTAGE_W];
         end else begin
             assign substage = 1'b0;
-        end
-    endgenerate
-
-    // butterflies are only used after the first stage
+        end    
+    endgenerate 
+    
     generate
         genvar butterfly_no, index;
 
@@ -246,19 +299,19 @@ module fft_stage(
             );        
 
             // TODO check all this later, pray it works now
-            assign index_twiddle    [butterfly_no] = ((butterfly_no << (SUBSTAGES-1)) + substage) << (TWIDDLES_W-stage);
-            assign index_a          [butterfly_no] = stage_indices[((butterfly_no << (SUBSTAGES-1)) + substage) << 1];
-            assign index_b          [butterfly_no] = stage_indices[(((butterfly_no << (SUBSTAGES-1)) + substage) << 1) + 1];
+            assign index_twiddle    [butterfly_no] = ((butterfly_no << (SUBSTAGE_W-1)) + substage) << (TWIDDLES_W-stage);
+            assign index_a          [butterfly_no] = stage_indices[((butterfly_no << (SUBSTAGE_W-1)) + substage) << 1];
+            assign index_b          [butterfly_no] = stage_indices[(((butterfly_no << (SUBSTAGE_W-1)) + substage) << 1) + 1];
 
             assign butterfly_a_in   [butterfly_no] = butterfly_data_in[index_a[butterfly_no]];
             assign butterfly_b_in   [butterfly_no] = butterfly_data_in[index_b[butterfly_no]];
-            assign butterfly_tw     [butterfly_no] = twiddle8[index_twiddle[butterfly_no]]; // TODO change this to a generic twiddle
+            assign butterfly_tw     [butterfly_no] = twiddles[index_twiddle[butterfly_no]]; 
 
             always_ff @(posedge clk) begin
                 if (state == RUNNING) begin
                     if (stage == STAGES-1) begin
-                        index_a_pipe[butterfly_no] <= {(((butterfly_no << (SUBSTAGES-1)) + substage)), index_a_pipe[butterfly_no][0:DATA_PIPE_WIDTH-2]};
-                        index_b_pipe[butterfly_no] <= {(((butterfly_no << (SUBSTAGES-1)) + substage) + TWIDDLES), index_b_pipe[butterfly_no][0:DATA_PIPE_WIDTH-2]};
+                        index_a_pipe[butterfly_no] <= {(((butterfly_no << (SUBSTAGE_W-1)) + substage)), index_a_pipe[butterfly_no][0:DATA_PIPE_WIDTH-2]};
+                        index_b_pipe[butterfly_no] <= {(((butterfly_no << (SUBSTAGE_W-1)) + substage) + TWIDDLES), index_b_pipe[butterfly_no][0:DATA_PIPE_WIDTH-2]};
                     end else begin
                         index_a_pipe[butterfly_no] <= {index_a[butterfly_no], index_a_pipe[butterfly_no][0:DATA_PIPE_WIDTH-2]};
                         index_b_pipe[butterfly_no] <= {index_b[butterfly_no], index_b_pipe[butterfly_no][0:DATA_PIPE_WIDTH-2]};
