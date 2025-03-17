@@ -26,7 +26,7 @@ module fft_stage(
     localparam STAGES = FFT_POINTS_W;
     localparam STAGE_W = clog2(STAGES);
     localparam SUBSTAGES = TWIDDLES / BUTTERFLIES;
-    localparam SUBSTAGE_W = clog2(SUBSTAGES);
+    localparam SUBSTAGE_W = (SUBSTAGES == 1) ? 0 : clog2(SUBSTAGES);
     localparam DATA_PIPE_WIDTH = PIPE_WIDTH + 2;
     localparam STAGE_DELAY = DATA_PIPE_WIDTH + 1 + (SUBSTAGES-1) * TWIDDLES;
     localparam STAGE_DELAY_W = clog2(STAGE_DELAY);
@@ -82,8 +82,6 @@ module fft_stage(
     logic                   reset_stage;
 
     logic [SUBSTAGE_W-1:0]  substage;
-    logic                   next_substage;
-    logic                   reset_substage;
 
     logic [STAGE_DELAY_W-1:0]   stage_counter;
 
@@ -299,9 +297,9 @@ module fft_stage(
             );        
 
             // TODO check all this later, pray it works now
-            assign index_twiddle    [butterfly_no] = ((butterfly_no << (SUBSTAGE_W-1)) + substage) << (TWIDDLES_W-stage);
-            assign index_a          [butterfly_no] = stage_indices[((butterfly_no << (SUBSTAGE_W-1)) + substage) << 1];
-            assign index_b          [butterfly_no] = stage_indices[(((butterfly_no << (SUBSTAGE_W-1)) + substage) << 1) + 1];
+            assign index_twiddle    [butterfly_no] = ((butterfly_no << SUBSTAGE_W) + substage) << (TWIDDLES_W-stage);
+            assign index_a          [butterfly_no] = stage_indices[((butterfly_no << SUBSTAGE_W) + substage) << 1];
+            assign index_b          [butterfly_no] = stage_indices[(((butterfly_no << SUBSTAGE_W) + substage) << 1) + 1];
 
             assign butterfly_a_in   [butterfly_no] = butterfly_data_in[index_a[butterfly_no]];
             assign butterfly_b_in   [butterfly_no] = butterfly_data_in[index_b[butterfly_no]];
@@ -310,8 +308,8 @@ module fft_stage(
             always_ff @(posedge clk) begin
                 if (state == RUNNING) begin
                     if (stage == STAGES-1) begin
-                        index_a_pipe[butterfly_no] <= {(((butterfly_no << (SUBSTAGE_W-1)) + substage)), index_a_pipe[butterfly_no][0:DATA_PIPE_WIDTH-2]};
-                        index_b_pipe[butterfly_no] <= {(((butterfly_no << (SUBSTAGE_W-1)) + substage) + TWIDDLES), index_b_pipe[butterfly_no][0:DATA_PIPE_WIDTH-2]};
+                        index_a_pipe[butterfly_no] <= {(((butterfly_no << SUBSTAGE_W) + substage)), index_a_pipe[butterfly_no][0:DATA_PIPE_WIDTH-2]};
+                        index_b_pipe[butterfly_no] <= {(((butterfly_no << SUBSTAGE_W) + substage) + TWIDDLES), index_b_pipe[butterfly_no][0:DATA_PIPE_WIDTH-2]};
                     end else begin
                         index_a_pipe[butterfly_no] <= {index_a[butterfly_no], index_a_pipe[butterfly_no][0:DATA_PIPE_WIDTH-2]};
                         index_b_pipe[butterfly_no] <= {index_b[butterfly_no], index_b_pipe[butterfly_no][0:DATA_PIPE_WIDTH-2]};

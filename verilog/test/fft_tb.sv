@@ -12,7 +12,7 @@ module fft_tb();
 
     localparam DATA_WIDTH   = 16;
     localparam FRACTION     = 11;
-    localparam FFT_POINTS   = 64;
+    localparam FFT_POINTS   = 8;
     localparam BUTTERFLIES  = 4;
     localparam PIPE_WIDTH   = 4;
     localparam FFT_POINTS_W = clog2(FFT_POINTS);

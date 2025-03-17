@@ -44,7 +44,7 @@ module fft(
     complex s2complexp_parallel_out [0:FFT_POINTS-1];
 
     logic fft_stage_ready;
-    logic fft_stage_1_ready;
+
     logic fft_stage_1_valid;
     complex fft_stage_1_data [0:FFT_POINTS-1];
     logic signed [DATA_WIDTH-1:0] a [0:TWIDDLES-1];
