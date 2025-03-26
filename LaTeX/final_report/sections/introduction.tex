@@ -1,0 +1,64 @@
+\documentclass[../main.tex]{subfiles}
+\graphicspath{{\subfix{../images/}}}
+
+\begin{document}
+
+% Project context: Introduction and description of background theory, analysis techniques, design tools etc. -- 10% (1,200 words)
+%   Extremely effective, concise and judicious introduction for the non-specialist engineer. Full description of background theory, analysis techniques and design tools as required. Student shows complete understanding and has made additional contributions to the development of the project context.
+
+% Selection and critical evaluation of the technical literature and other sources of relevant information that impact the project. -- 15% (1,800 words)
+%   Outstanding and complete review of all relevant previous works, including insightful identification of all strengths and weaknesses. Perceptive critical analysis that is relevant to the project. Extensive set of references.
+
+%   You should set out the context of the work with a clear statement of its aims.
+%   You may also introduce the layout of the report.
+% --
+%   You should concisely review the relevant literature and any past work and link this to your project aims.
+%   You should describe any background theory, analysis techniques, design tools that you will rely on.
+
+% talking points 
+% - CNC precision machining
+%   . fusion 
+%   . aerospace 
+
+
+The demand for large-scale, low-cost precision machining using Computer Numerical Control (CNC) has risen in recent years as advanced processes become more commonplace in the manufacturing industry. For example, the precision machining of tungsten for use in fusion reactors is one such application where tool health monitoring is crucial, as the machining of hard materials such as tungsten is characterised by short tool life \cite{RN18}, necessitating frequent tool changes to avoid failures and potential damage to the workpiece--tools are often discarded prematurely, leading to high manufacturing and environmental costs.
+
+% TODO replace these citations with ones in EndNote, you'll have to do this when you get back to campus
+% TODO when I have a stable connection come back to this section and discuss aerospace applications for precision machining
+
+Therefore, tool health monitoring is an essential step in improving the precision of machining processes in manufacturing mechanical work pieces as well as reducing downtime and extending the lifespan of tools \cite{s22010291}, \cite{9843528}, \cite{9462147}, \cite{RN10}. Many existing methods rely on transmitting sensor signals from a tool-holder to a nearby computer which then processes the data to make a decision about the tool condition \cite{RN13}. 
+Thus, a significant amount of power and, crucially, time is taken to wirelessly transmit a large quantity of information sequentially (\textbf{Fig \ref{fig:comm_example}}) \cite{RN1}. % TODO redo the diagram from the paper to include transmission time as well as power consumption
+This project aims to investigate the implementation of a simple artificial intelligence (AI) at the sensor edge using FPGAs with minimal computational resources. Avoiding the inherent serialisation of data via the wireless transmission process and taking advantage of the parallel processing capabilities of FPGAs to make real-time decisions on tool condition at the sensor edge.
+
+% background theory: 
+%   - condition monitoring / anomaly detection
+%   - artificial neural networks
+%       . the perceptron
+%       . activation functions
+%   - convolutional neural networks
+%       . patterns in a time series
+%   - autoencoders
+%   - supervised and unsupervised learning
+%   - FPGAs?
+
+Condition monitoring (CM) is the strategy of monitoring one or more parameters (temperature, current draw, vibration, force,  etc... \cite{citation(s)_needed}) that indicate the condition of a machine over time in order to identify developing faults that may lead to damage to the machinery and/or workpiece. For example, as the condition of CNC bits degrade, the precision to which the workpiece may be cut also degrades; at some threshold the tool may be considered too worn to produce products with sufficient precision.
+
+% TODO: image of a CNC tool bit before and after wear 
+
+Determining at what point a tool is considered 'new' and 'worn' denotes a binary classification problem. In the absence of strictly deterministic methods, pattern recognition tools such as artificial neural networks (ANNs) can be used to identify how feature parameters indicate wear.  
+
+
+
+% analysis techniques:
+%   - computational analysis of the recorded signals using MATLAB to determine a suitable neural network
+%   - computational analysis of recorded signals from mech eng using modelsim to simulate FPGA beheviour before synthesis
+%   - experimental analysis of the completed system in real-life
+
+% design tools:
+%   - MATLAB
+%   - Python
+%   - SystemVerilog 
+%   - ModelSim
+%   - Quartus Prime 
+
+\end{document}
