@@ -1,4 +1,4 @@
-from math import cos, sin, pi, ceil
+import csv
 
 def float_to_fixed(num, int_bits, frac_bits):
     total_bits = int_bits + frac_bits
@@ -33,6 +33,20 @@ def fixed_to_float(fixed_num, int_bits, frac_bits):
     float_num = fixed_num / scale_factor
     return float_num
 
+def max_binary(int_bits, frac_bits):
+    m = 0
+    for i in range(int_bits-1):
+        m += 2**i
+
+    for i in range(frac_bits):
+        m += 1/(2**(i+1))
+
+    return m
+
+def min_binary(int_bits):
+    return -2**(int_bits-1)
+
+
 def int_to_hex(int_in, nibbles_per_int):
     
     line = ""
@@ -41,31 +55,17 @@ def int_to_hex(int_in, nibbles_per_int):
     if (len(el_hex_str) < nibbles_per_int):
         el_hex_str = ("0" * (nibbles_per_int - len(el_hex_str))) + el_hex_str
     
-    line = line + el_hex_str
+    line = line + el_hex_str + "\n"
 
     return line
 
-int_bits = 11
-frac_bits = 7
-totalbits = int_bits + frac_bits
-fft_points = 256
-num_twiddles = fft_points // 2
-twiddles = [[0 for x in range(2)] for y in range(num_twiddles)]
-filename = "../verilog/src/fft_twiddles/twiddles{0}_{1}I{2}F".format(num_twiddles, int_bits, frac_bits)
+tanh_int_bits = 3
+tanh_frac_bits = 3
 
-for r in range(num_twiddles):
-    twiddles[r][0] = cos(2*pi*(r/fft_points)) # real
-    twiddles[r][1] = -sin(2*pi*(r/fft_points)) # imaginary
+int_bits = 8
+frac_bits = 8
 
-hex_lines = []
-for idx,tw in enumerate(twiddles):
-    re = int_to_hex(float_to_fixed(float(tw[0]),int_bits,frac_bits,),ceil(totalbits/4))
-    im = int_to_hex(float_to_fixed(float(tw[1]),int_bits,frac_bits,),ceil(totalbits/4))
 
-    debug_string = "real float: {0} fixed: {1} | imag float: {2} fixed: {3}".format(tw[0], fixed_to_float(int(re,16),int_bits,frac_bits), tw[1], fixed_to_float(int(im,16),int_bits,frac_bits))
-    print(debug_string)
-    # hex_lines.append(re + ", " + im + "\n")
-    hex_lines.append("assign twiddles[" + str(idx) + "].re = "+ str(totalbits) + "'h" + re + ";\n" + "assign twiddles[" + str(idx) + "].im = "+ str(totalbits) + "'h" + im + ";\n")
 
-with open(filename + ".sv", 'w') as file:
-    file.writelines(hex_lines)
+print("max: {0}".format(int_to_hex(float_to_fixed(max_binary(tanh_int_bits, tanh_frac_bits), int_bits, frac_bits), 4)))
+print("min: {0}".format(int_to_hex(float_to_fixed(min_binary(tanh_int_bits), int_bits, frac_bits), 4)))

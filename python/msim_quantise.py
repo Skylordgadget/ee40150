@@ -1,4 +1,4 @@
-from math import cos, sin, pi, ceil
+from math import ceil
 
 def float_to_fixed(num, int_bits, frac_bits):
     total_bits = int_bits + frac_bits
@@ -41,31 +41,25 @@ def int_to_hex(int_in, nibbles_per_int):
     if (len(el_hex_str) < nibbles_per_int):
         el_hex_str = ("0" * (nibbles_per_int - len(el_hex_str))) + el_hex_str
     
-    line = line + el_hex_str
+    line = line + el_hex_str + "\n"
 
     return line
 
 int_bits = 11
 frac_bits = 7
 totalbits = int_bits + frac_bits
-fft_points = 256
-num_twiddles = fft_points // 2
-twiddles = [[0 for x in range(2)] for y in range(num_twiddles)]
-filename = "../verilog/src/fft_twiddles/twiddles{0}_{1}I{2}F".format(num_twiddles, int_bits, frac_bits)
+filename = "../verilog/top/new_mr_train"
 
-for r in range(num_twiddles):
-    twiddles[r][0] = cos(2*pi*(r/fft_points)) # real
-    twiddles[r][1] = -sin(2*pi*(r/fft_points)) # imaginary
+lines = []
+with open(filename + ".txt", 'r') as file:
+    # Iterate over each line in the file
+    for line in file:
+        # Strip leading/trailing whitespace and append the line to the list
+        lines.append(line.strip())
 
 hex_lines = []
-for idx,tw in enumerate(twiddles):
-    re = int_to_hex(float_to_fixed(float(tw[0]),int_bits,frac_bits,),ceil(totalbits/4))
-    im = int_to_hex(float_to_fixed(float(tw[1]),int_bits,frac_bits,),ceil(totalbits/4))
+for line in lines:
+    hex_lines.append(int_to_hex(float_to_fixed(float(line),int_bits,frac_bits,),ceil(totalbits/4)))
 
-    debug_string = "real float: {0} fixed: {1} | imag float: {2} fixed: {3}".format(tw[0], fixed_to_float(int(re,16),int_bits,frac_bits), tw[1], fixed_to_float(int(im,16),int_bits,frac_bits))
-    print(debug_string)
-    # hex_lines.append(re + ", " + im + "\n")
-    hex_lines.append("assign twiddles[" + str(idx) + "].re = "+ str(totalbits) + "'h" + re + ";\n" + "assign twiddles[" + str(idx) + "].im = "+ str(totalbits) + "'h" + im + ";\n")
-
-with open(filename + ".sv", 'w') as file:
+with open(filename + ".hex", 'w') as file:
     file.writelines(hex_lines)

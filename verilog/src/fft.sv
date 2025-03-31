@@ -98,6 +98,9 @@ module fft(
         end
     endgenerate
 
+    /* fft_stage accounts for the rest of the fft (stages 2+)
+    it handles the creation, control and connection of butterflies across each
+    stage */
     fft_stage #(
         .DATA_WIDTH     (DATA_WIDTH),
         .FRACTION       (FRACTION),

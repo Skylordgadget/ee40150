@@ -1,7 +1,7 @@
 %% Load Files
 clc; clf; close all; clear;
 
-percent_train = 0.1; % percentage of data to be used for training
+percent_train = 0.9; % percentage of data to be used for training
 percent_test = 1 - percent_train; % percentage of data to be used for testing
 percent_samples = 1; % percent of samples in each file to be used
 
@@ -91,7 +91,7 @@ clf; close(findall(groot, "Type", "figure"));
 
 const = 0;
 
-signal_lim = 64;
+signal_lim = 256;
 Fs = 2500; % sampling frequency
 T = 1/Fs; % time interval
 L = signal_lim; % length of signal
@@ -100,7 +100,7 @@ t = (0:L-1)*T; % points in time
 new_mr_train_pre_fft = reshape(new_mr_train(1:(length(new_mr_train) - mod(length(new_mr_train), signal_lim))), [signal_lim, floor(length(new_mr_train)/signal_lim)]);
 new_mr_train_post_fft = cell(floor(length(new_mr_train)/signal_lim),1);
 
-% avg_spectrum = zeros(1,(signal_lim/2)+1);
+avg_spectrum = zeros(1,(signal_lim/2)+1);
 
 for i=1:floor(length(new_mr_train)/signal_lim)
     Y = fft(new_mr_train_pre_fft(:,i));
@@ -108,13 +108,13 @@ for i=1:floor(length(new_mr_train)/signal_lim)
     P1 = P2(1:L/2+1);
     P1(2:end-1) = 2*P1(2:end-1);
     new_mr_train_post_fft{i} = P1 + const;
-    % avg_spectrum = avg_spectrum + P1';
+    avg_spectrum = avg_spectrum + P1';
 end
 
-% avg_spectrum = avg_spectrum ./ floor(length(new_mr_train)/signal_lim);
+avg_spectrum = avg_spectrum ./ floor(length(new_mr_train)/signal_lim);
 % 
-% figure;
-% plot(Fs/L*(0:(L/2)),avg_spectrum);
+figure;
+plot(Fs/L*(0:(L/2)),avg_spectrum);
 
 new_mr_test_pre_fft = reshape(new_mr_test(1:(length(new_mr_test) - mod(length(new_mr_test), signal_lim))), [signal_lim, floor(length(new_mr_test)/signal_lim)]);
 new_mr_test_post_fft = cell(floor(length(new_mr_test)/signal_lim),1);
@@ -125,7 +125,7 @@ for i=1:floor(length(new_mr_test)/signal_lim)
     P1 = P2(1:L/2+1);
     P1(2:end-1) = 2*P1(2:end-1);
     new_mr_test_post_fft{i} = P1 + const;
-    % avg_spectrum = avg_spectrum + P1';
+    avg_spectrum = avg_spectrum + P1';
 end
 
 worn_mr_test_pre_fft = reshape(worn_mr_test(1:(length(worn_mr_test) - mod(length(worn_mr_test), signal_lim))), [signal_lim, floor(length(worn_mr_test)/signal_lim)]);
@@ -138,7 +138,7 @@ for i=1:floor(length(worn_mr_test)/signal_lim)
     P1 = P2(1:L/2+1);
     P1(2:end-1) = 2*P1(2:end-1);
     worn_mr_test_post_fft{i} = P1 + const;
-    % avg_spectrum = avg_spectrum + P1';
+    avg_spectrum = avg_spectrum + P1';
 end
 
 % feature_dimension = 1;
@@ -150,18 +150,16 @@ new_mr_test_post_fft = flip_data(new_mr_test_post_fft);
 worn_mr_test_post_fft = flip_data(worn_mr_test_post_fft);
 
 layers = [ sequenceInputLayer(feature_dimension)
-    fullyConnectedLayer(feature_dimension)
-    tanhLayer
     fullyConnectedLayer(8)
     tanhLayer
     fullyConnectedLayer(4)
-    tanhLayer
+    reluLayer
     fullyConnectedLayer(2)
-    tanhLayer
+    reluLayer
     fullyConnectedLayer(4)
-    tanhLayer
+    reluLayer
     fullyConnectedLayer(8)
-    tanhLayer
+    reluLayer
     fullyConnectedLayer(feature_dimension)];
 
 options = trainingOptions('adam', ...
@@ -176,6 +174,39 @@ decoded_new_fft = predict(net_fft,new_mr_test_post_fft{120});
 decoded_worn_fft = predict(net_fft,worn_mr_test_post_fft{260});
 
 helperVisualizeModelBehavior(new_mr_test_post_fft{120}, worn_mr_test_post_fft{120}, decoded_new_fft, decoded_worn_fft);
+
+fc_parameters_1 = net_fft.Learnables.Value{1,1};
+fc_parameters_1 = [net_fft.Learnables.Value{2,1}, fc_parameters_1]';
+fc_parameters_2 = net_fft.Learnables.Value{3,1};
+fc_parameters_2 = [net_fft.Learnables.Value{4,1}, fc_parameters_2]';
+fc_parameters_3 = net_fft.Learnables.Value{5,1};
+fc_parameters_3 = [net_fft.Learnables.Value{6,1}, fc_parameters_3]';
+fc_parameters_4 = net_fft.Learnables.Value{7,1};
+fc_parameters_4 = [net_fft.Learnables.Value{8,1}, fc_parameters_4]';
+fc_parameters_5 = net_fft.Learnables.Value{9,1};
+fc_parameters_5 = [net_fft.Learnables.Value{10,1}, fc_parameters_5];
+fc_parameters_6 = net_fft.Learnables.Value{11,1};
+fc_parameters_6 = [net_fft.Learnables.Value{12,1}, fc_parameters_6];
+
+csvwrite("../weights/latest/fc_parameters_1.csv", fc_parameters_1);
+csvwrite("../weights/latest/fc_parameters_2.csv", fc_parameters_2);
+csvwrite("../weights/latest/fc_parameters_3.csv", fc_parameters_3);
+csvwrite("../weights/latest/fc_parameters_4.csv", fc_parameters_4);
+csvwrite("../weights/latest/fc_parameters_5.csv", fc_parameters_5);
+csvwrite("../weights/latest/fc_parameters_6.csv", fc_parameters_6);
+
+% csvwrite("../weights/latest/fc_1_weights.csv", net_fft.Learnables.Value{1,1})
+% csvwrite("../weights/latest/fc_1_biases.csv", net_fft.Learnables.Value{2,1})
+% csvwrite("../weights/latest/fc_2_weights.csv", net_fft.Learnables.Value{3,1})
+% csvwrite("../weights/latest/fc_2_biases.csv", net_fft.Learnables.Value{4,1})
+% csvwrite("../weights/latest/fc_3_weights.csv", net_fft.Learnables.Value{5,1})
+% csvwrite("../weights/latest/fc_3_biases.csv", net_fft.Learnables.Value{6,1})
+% csvwrite("../weights/latest/fc_4_weights.csv", net_fft.Learnables.Value{7,1})
+% csvwrite("../weights/latest/fc_4_biases.csv", net_fft.Learnables.Value{8,1})
+% csvwrite("../weights/latest/fc_5_weights.csv", net_fft.Learnables.Value{9,1})
+% csvwrite("../weights/latest/fc_5_biases.csv", net_fft.Learnables.Value{10,1})
+% csvwrite("../weights/latest/fc_6_weights.csv", net_fft.Learnables.Value{11,1})
+% csvwrite("../weights/latest/fc_6_biases.csv", net_fft.Learnables.Value{12,1})
 
 %% Plot MSE
 
