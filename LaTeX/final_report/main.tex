@@ -3,9 +3,18 @@
 
 \usepackage{subfiles} % LOAD THIS LAST
 
+\usepackage{filehook}
+\AtEndOfIncludes{%
+  \global\let\savedclearpage\clearpage
+  \global\let\clearpage\relax
+}
+\AfterIncludes{%
+  \global\let\clearpage\savedclearpage
+}
+
 \graphicspath{{images/}}
 
-\usepackage[a4paper,top=0.95cm,bottom=2.54cm,left=1.57cm,right=1.57cm,marginparwidth=1.75cm]{geometry}
+\usepackage[a4paper,top=2.0cm,bottom=2.0cm,left=2.0cm,right=2.0cm,marginparwidth=1.75cm]{geometry}
 
 
 \title{   
@@ -20,7 +29,11 @@
 \author{Harry Kneale-Roby}
 \date{2024/25} 
 
+
+\providecommand{\main}{LaTeX/final_report}  % *Modification: define file location
+\def\biblio{\bibliographystyle{ieeetr}\bibliography{\main/refs.bib}}  % *Modification: added `\main/` to specify relative file location.
 \begin{document}
+\def\biblio{}
 
 \maketitle
 
@@ -47,7 +60,7 @@
 \thispagestyle{empty} 
 \pagebreak
 % max 250 words -- 5%
-\textbf{Abstract--}
+
 
 \tableofcontents
 
@@ -57,13 +70,14 @@
 
 \pagebreak
 
-\twocolumn
-% strange 
 
 % Project context: Introduction and description of background theory, analysis techniques, design tools etc. -- 10% (1,200 words)
-% Selection and critical evaluation of the technical literature and other sources of relevant information that impact the project. -- 15% (1,800 words)
-\section{Introduction}
+
 \subfile{LaTeX/final_report/sections/introduction}
+
+% Selection and critical evaluation of the technical literature and other sources of relevant information that impact the project. -- 15% (1,800 words)
+
+\subfile{LaTeX/final_report/sections/literature_review}
 
 % Application of engineering knowledge and understanding and quality of experimental results and/or design work. -- 40% (4,800 words)
 \section{Methods and Results (placeholder title)}
@@ -79,6 +93,7 @@
 \section{Acknowledgements}
 \subfile{LaTeX/final_report/sections/project_review}
 
+\onecolumn
 
 \bibliographystyle{ieeetr}
 \bibliography{LaTeX/final_report/refs}

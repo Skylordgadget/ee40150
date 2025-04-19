@@ -1,0 +1,64 @@
+\documentclass[../main.tex]{subfiles}
+\graphicspath{{\subfix{../images/}}}
+\newcommand{\citationneeded}{[\textit{citation needed}]}
+% Selection and critical evaluation of the technical literature and other sources of relevant information that impact the project. -- 15% (1,800 words / 2,117.647 words)
+%   Outstanding and complete review of all relevant previous works, including insightful identification of all strengths and weaknesses. Perceptive critical analysis that is relevant to the project. Extensive set of references.
+
+%   You should concisely review the relevant literature and any past work and link this to your project aims.
+
+\begin{document}
+\emergencystretch 3em
+
+\twocolumn
+
+\section{Related Work}
+
+% start with the papers that focus more on the algorithmic solution. i.e. that of Alborz's paper which only talks about theoretical MATLAB solutions based on recordings, i.e. just the AI and fault dections papers
+
+% I've only got about four of those so I might need to suppliment it with papers from the systematic mapping paper 
+
+% then discuss papers directly related to my work, i.e., using FPGAs to do anomaly detection at the sensor edge using AI, I'll probably be able to squeeze 2,100 words out of all that
+
+%% Machine Learning / Supervised Learning
+
+Within the last decade, research on anomaly detection and tool condition monitoring using machine learning techniques has gained significant popularity, largely thanks to the decreasing cost and size---along 
+with the simultaneous increase in computational efficiency---
+
+offered by modern Integrated Circuit (IC) processes \cite{RN21}\cite{RN22}. High precision tool condition monitoring and anomaly detection rely on a high volume of data from sensors that are typically attached to the tool holder, hence, the efficiency of the data processing algorithms used to determine tool health is critical. 
+
+Researchers have suggested that the challenge of efficiently processing big sensor data may be addressed using machine learning methods \cite{RN23}. Omole \textit{et al.} \cite{RN18} combine sensor signal prediction with classification machine learning models to forecast tool wear during the milling of tungsten. Several machine learning algorithms were thoroughly investigated, including an artificial neural network (ANN), a one-dimensional convolutional neural network (1-D CNN), a random forest (RF), a support vector machine (SVM) and extreme gradient boosting (XGBoost). The 1-D CNN was found to outperform the ANN in forecasting time series bending moment, while the RF, trained on features extracted from the bending moment signal using wavelet scattering (WS), achieved 95\% accuracy in predicting the current tool condition. Zhu \textit{et al.} \cite{RN13} implement a multi-branch Bayesian neural network (MBBNN) for estimating the wear of CNC tool health; trained on features extracted from the continuous wavelet transform (CWT) of tri-axial (x, y, z) force and vibration data. 
+
+Using computationally expensive signal processing techniques, such as MRWA, the CWT or WS, to extract features from raw data may limit the flexibility of the solution, as the presence of these features often relies on prior knowledge of the incoming signal \cite{RN24}.
+
+Huang \textit{et al.} \cite{RN17} use a reshaped time series convolutional neural network (RTSCNN) to adaptively learn distinctive characteristics of tool wear directly from raw multisensory signals. As no traditional signal processing techniques are used to extract features from the multisensory data, no information is omitted during the learning and prediction process. This results in a lower mean absolute error and root mean square error compared to methods that employ traditional signal processing for feature extraction.
+
+While the research presented thus far provides a decent analysis of common machine learning algorithms for condition monitoring and prediction, the proposed methods are based on supervised learning models, i.e. algorithms trained on labelled data, meaning the data includes both input features and corresponding known outputs. In the case of \cite{RN17} and \cite{RN13}, manual measurements of tool wear were taken using a microscope to supply target data. This presents two challenges: firstly, the issue of unbalanced data, i.e. there is more 'new' data than 'worn' data, leading to an over-representation of new data during the training phase \cite{RN6}; secondly, the need to take manual offline measurements introduces unwanted downtime, unsuitable in an industrial setting.
+
+%% AANNs / Autoencoders
+
+Unsupervised and semi-supervised learning models may be employed to eliminate the need for labelled anomalous or worn tool data. Autoassociative neural networks (commonly referred to as autoencoders) are one such type of semi-supervised learning model. Demetgul \textit{et al.} \cite{RN27} present a method for detecting horizontal misalignment in CNC machine tool linear axes by using motor current signals with autoencoder-based deep learning models. Experimental data from a test platform simulating misalignments were used to train models. Among the evaluated architectures, the Convolutional Neural Network-Long Short Term Memory-Autoencoder (CNN-LSTM-AE) achieved the highest classification accuracy. The use of an autoencoder enabled effective anomaly detection without labelled data or machine downtime, offering a low-cost, nonintrusive, and highly adaptable solution for real-time condition monitoring. 
+
+Bayram \textit{et al.} \cite{RN4} implement an autoassociative neural network (AANN) trained on healthy features extracted via multi-resolution wavelet analysis (MRWA) from two vibration signals to detect the presence of low frequencies that indicate faults as electric motors age. Zhang \textit{et al.} \cite{RN25} propose a semi-supervised approach for bearing fault diagnosis using variational autoencoder (VAE)-based deep generative models, which effectively leverage both labelled and unlabelled data, outperforming traditional supervised, unsupervised and state-of-the-art semi-supervised methods, particularly when labelled data is scarce. The models also demonstrate robustness in real-world scenarios involving mislabelled or naturally evolved bearing faults. Yan \textit{et al.} \cite{RN26} introduce a Hybrid Robust Convolutional Autoencoder (HRCAE) for unsupervised anomaly detection in machine tools, particularly under noisy conditions. Experimental validation on real CNC machine datasets demonstrates that HRCAE surpasses existing methods in accuracy and stability across various noise levels, without the need for labelled data.
+
+For low-precision condition monitoring and simple binary wear classification, wired or sensor-less approaches may suffice. However, practical implementation for high-precision CNC machining necessitates an elegant method for collecting high-resolution sensory information. Often, establishing a wired connection to onboard sensors is not feasible, as factors such as the rotating tool head, signal-to-noise ratio (SNR) and general safety precautions preclude the use of cables. Consequently, a Wireless Sensor Node (WSN) becomes necessary to transmit data \cite{RN29, RN28}.
+
+%% Wireless Sensor Nodes
+
+WSNs are Internet of Things (IoT) devices that typically consist of a sensing unit (e.g. an accelerometer), a processing unit (i.e. a microcontroller, or MCU), a transceiver unit (e.g. a Wi-Fi module) and a power unit (e.g. a battery) \cite{KEERTHANA2020145}. In almost all WSN applications, the aim is to maximise power efficiency to sustain continuous operation and minimise the device footprint to be as nonintrusive as is feasible. 
+
+Aydin \textit{et al.} \cite{RN31} implement a wireless sensor network-based system for real-time condition monitoring and fault diagnosis of induction motors. Nodes are built around Ultra Low-Power (ULP) MCUs as well as XBee wireless modules using the ZigBee IEEE 802.15.4 protocol. Each node collects current data via ABBEL25P1 sensors and vibration data via bi-axial accelerometers, digitises them using a 12-bit ADC, and wirelessly transmits the data to a central node. These signals are processed using two intelligent techniques: a fuzzy logic system analyses Root Mean Square (RMS) values of three-phase currents to identify stator faults, while Gaussian Mixture Models (GMMs) and Bayesian classifiers identify bearing faults. Zhan \textit{et al.} \cite{RN32} present a wireless monitoring system that uses a smart holder embedded with a tri-axial accelerometer, MCU, Bluetooth Low Energy (BLE) transmitter and rechargeable battery to capture and transmit real-time vibration data from an end-mill during operation. Vibration data is sent wirelessly to a CNC edge server via a BLE gateway, where a second-order RMS algorithm is used to detect tool wear, demonstrating a clear correlation between increasing vibration magnitudes and levels of end-mill damage. Chen \textit{et al.} \cite{RN33} propose an intelligent wireless tool condition monitoring system that uses a compact, low-power acquisition module built around an STM32 MCU, mounted in a flexible, chuck-style monitoring ring. The ring captures tri-axial vibration data via an MPU9250 accelerometer and transmits it over Wi-Fi using an EMW3081 module to a host computer, where a CNN-LSTM deep learning model processes the vibration data to classify tool wear states. Ostasevicius \textit{et al.} \cite{RN28, RN30} propose a WSN integrated into a milling tool holder that uses torsional vibrations from the machining process to generate electricity via a piezoelectric transducer. This harvested energy is supplied to an Ultra Low-Power (ULP) MCU, which wirelessly transmits data related to tool wear via Bluetooth. Of particular note is the complete absence of a battery, enabling virtually maintenance-free online monitoring.
+
+The literature makes it clear that WSNs are valuable for certain condition monitoring applications. However, WSNs typically stream data to a central node for processing \cite{RN35}. In precision CNC applications, it is necessary for a high volume of data to be transmitted continuously. As a result, the transceiver becomes the greatest power sink, often surpassing the power consumption of the MCU \cite{RN36}, while also introducing an inherent bottleneck due to serial transmission. 
+
+%% Edge AI / FPGAs
+
+Recent research has increasingly favoured the use of so-called edge AI---a combination of edge computing and Artificial Intelligence (AI)---for processing data and running AI algorithms directly on local devices rather than in a centralised cloud. In particular, the use of Field Programmable Gate Arrays (FPGAs) at the sensor edge is gaining traction due to their parallelised processing capabilities, which eliminate the transmission bottleneck at the cost of increased power consumption at the processing unit \cite{RN37}.
+
+Rangel-Magdaleno \textit{et al.} \cite{RN11} present a low-cost FPGA-based vibration analyser for continuous online monitoring of CNC machinery, incorporating fused signal processing techniques including time-domain, FFT, DWT, and combined DWT-FFT analysis. Bengherbia \textit{et al.} \cite{RN2} present a novel FPGA-based wireless sensor node designed for machine vibration monitoring and fault diagnosis, integrating real-time signal processing (via FFT) and secure data transmission (via AES encryption) within a reconfigurable System-on-Chip (SoC) architecture. Unlike typical MCU-based nodes, the proposed solution leverages the computational power and flexibility of FPGAs to meet industrial high-precision demands. Experimental validation demonstrates that the nodes are effective for detecting unbalanced faults in rotating machinery, offering improvements in precision, power efficiency, and integration over existing WSN-based approaches. The same researchers go on to propose in \cite{RN1}, an architecture incorporating an ADALINE neural network coprocessor for real-time vibration analysis and fault diagnosis in rotating machinery. Departing from conventional FFT-based methods, the use of ADALINE enables rapid harmonic estimation with significantly reduced processing. Extending node battery lifetime beyond 16 hours.
+
+
+\onecolumn
+
+\biblio
+
+\end{document}
