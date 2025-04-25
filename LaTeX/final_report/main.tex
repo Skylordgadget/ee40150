@@ -14,8 +14,13 @@
 
 \graphicspath{{images/}}
 
-\usepackage[a4paper,top=2.0cm,bottom=2.0cm,left=2.0cm,right=2.0cm,marginparwidth=1.75cm]{geometry}
-
+\usepackage[a4paper,top=2.0cm,bottom=2.0cm,left=2.0cm,right=2.0cm]{geometry}
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    citecolor=blue,
+    linkcolor=blue
+}
 
 \title{   
     Implementation of Intelligent Monitoring
@@ -73,25 +78,20 @@
 
 % Project context: Introduction and description of background theory, analysis techniques, design tools etc. -- 10% (1,200 words)
 
-\subfile{LaTeX/final_report/sections/introduction}
+\subfile{LaTeX/final_report/sections/1_introduction_and_context}
 
 % Selection and critical evaluation of the technical literature and other sources of relevant information that impact the project. -- 15% (1,800 words)
 
-\subfile{LaTeX/final_report/sections/literature_review}
+\subfile{LaTeX/final_report/sections/2_related_works}
 
 % Application of engineering knowledge and understanding and quality of experimental results and/or design work. -- 40% (4,800 words)
-\section{Methods and Results (placeholder title)}
-\subfile{LaTeX/final_report/sections/methods_and_results}
+\subfile{LaTeX/final_report/sections/3_methods_and_results}
 
 % Discussion, conclusions, recommendations for further work and project review. -- 20% (2,400)
-\section{Discussion and Conclusions}
-\subfile{LaTeX/final_report/sections/discussion_and_conclusions}
-
-\section{Project Review}
-\subfile{LaTeX/final_report/sections/project_review}
+\subfile{LaTeX/final_report/sections/4_discussion_and_conclusions}
+\subfile{LaTeX/final_report/sections/5_project_review}
 
 \section{Acknowledgements}
-\subfile{LaTeX/final_report/sections/project_review}
 
 \onecolumn
 
